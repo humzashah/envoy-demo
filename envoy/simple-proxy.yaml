@@ -1,0 +1,51 @@
+static_resources:
+  listeners:
+  - name: listener_0
+    address:
+      socket_address:
+        address: 0.0.0.0
+        port_value: 3000
+    filter_chains:
+    - filters:
+      - name: envoy.http_connection_manager
+        config:
+          stat_prefix: ingress_http
+          codec_type: AUTO
+          route_config:
+            name: local_route
+            virtual_hosts:
+            - name: local_service
+              domains: ["*"]
+              routes:
+              - match:
+                  prefix: "/"
+                route:
+                  cluster: services
+          http_filters:
+          - name: envoy.router
+  clusters:
+  - name: services
+    connect_timeout: 0.25s
+    type: STRICT_DNS
+    lb_policy: ROUND_ROBIN
+
+    hosts:
+    - socket_address:
+        address: service
+        port_value: 5000
+
+    # TODO: Figure out why the interval isn't working as expected
+    health_checks:
+    - timeout: 0.4s
+      interval: 3s
+      unhealthy_threshold: 3
+      healthy_threshold: 1
+      reuse_connection: false
+      http_health_check: { path: "/health" }
+
+admin:
+  access_log_path: /tmp/admin_access.log
+  address:
+    socket_address:
+      address: 0.0.0.0
+      port_value: 3001

@@ -1,0 +1,27 @@
+version: "3"
+
+services:
+
+  service:
+    build:
+      context: services/go
+    environment:
+      - "THIS_SERVICE_NAME=ServiceOne"
+      - "THIS_SERVICE_ADDRESS=service:5000"
+      - "JUMP_TARGET_URL=http://envoy:3001/info"
+
+  envoy:
+    build:
+      context: envoy
+      args:
+        config_file_name: request-tracing.yaml
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    depends_on:
+      - service
+
+  zipkin:
+    image: openzipkin/zipkin
+    ports:
+      - "9411:9411"

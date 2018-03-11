@@ -1,0 +1,21 @@
+version: "3"
+
+services:
+
+  service:
+    build:
+      context: services/go
+    environment:
+      - "THIS_SERVICE_NAME=ServiceOne"
+      - "THIS_SERVICE_ADDRESS=service:5000"
+
+  envoy:
+    build:
+      context: envoy
+      args:
+        config_file_name: simple-proxy.yaml
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    depends_on:
+      - service
